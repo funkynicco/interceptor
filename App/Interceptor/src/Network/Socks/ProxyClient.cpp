@@ -41,7 +41,7 @@ void ProxyClient::Process()
     {
         FD_ZERO(&fd);
         FD_SET(Socket, &fd);
-        if (select(0, &fd, NULL, NULL, &tv) > 0 &&
+        if (select(0, &fd, nullptr, nullptr, &tv) > 0 &&
             FD_ISSET(Socket, &fd))
         {
             int len = recv(Socket, tempBuffer, sizeof(tempBuffer), 0);

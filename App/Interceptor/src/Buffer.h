@@ -10,18 +10,22 @@ typedef struct _DATA_BUF
 
 } DATA_BUF, *LPDATA_BUF;
 
-class CBuffer
+class Buffer
 {
 public:
-    CBuffer();
-    virtual ~CBuffer();
-    LPBYTE	Allocate(int nSize);
-    map<DWORD_PTR, LPDATA_BUF>::iterator Free(LPBYTE lpBuf);
-    void	Clear();
+    Buffer();
+    virtual ~Buffer();
+    
+    LPBYTE Allocate(int nSize);
+    std::map<DWORD_PTR, LPDATA_BUF>::iterator Free(LPBYTE lpBuf);
+    void Clear();
 
 private:
     void AssignBuffer(LPDATA_BUF lpBuf);
-    LPDATA_BUF m_pHead, m_pTail;
-    LPDATA_BUF m_pExtHead, m_pExtTail;
-    map<DWORD_PTR, LPDATA_BUF> m_mapAlloc;
+
+    LPDATA_BUF m_pHead;
+    LPDATA_BUF m_pTail;
+    LPDATA_BUF m_pExtHead;
+    LPDATA_BUF m_pExtTail;
+    std::map<DWORD_PTR, LPDATA_BUF> m_mapAlloc;
 };

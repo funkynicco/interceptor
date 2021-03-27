@@ -1,13 +1,14 @@
 #pragma once
 
+#include <NativeLib/Network/AsynchronousTcpServer.h>
+
 #include "../Shared/NetworkDefines.h"
 
-class CHttpProxyServer;
 struct HttpProxyClient
 {
-    CHttpProxyServer* pServer;
+    class HttpProxyServer* pServer;
     BOOL bQueryDisconnect;
-    DPID dpId;
+    nl::network::DPID dpId;
     char szIP[16];
     DWORD dwIP;
     // Socket that is connected to the target host
@@ -23,9 +24,9 @@ struct HttpProxyClient
 
     HttpProxyClient* next;
 
-    HttpProxyClient(CHttpProxyServer* pServer) :
+    HttpProxyClient(class HttpProxyServer* pServer) :
         pServer(pServer),
-        next(NULL),
+        next(nullptr),
         Socket(INVALID_SOCKET)
     {
         tv.tv_sec = 0;
@@ -38,7 +39,7 @@ struct HttpProxyClient
         Free();
     }
 
-    void Init(DPID dpId)
+    void Init(nl::network::DPID dpId)
     {
         this->dpId = dpId;
         dwIP = 0;
@@ -63,23 +64,23 @@ struct HttpProxyClient
     void Process();
 };
 
-class CHttpProxyServer : public CIocpServer
+class HttpProxyServer : public nl::network::AsynchronousTcpServer
 {
 public:
-    CHttpProxyServer();
-    virtual ~CHttpProxyServer();
-    void OnClientConnected(DPID dpId);
-    void OnClientDisconnected(DPID dpId);
-    void OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSize);
-    void OnSendCompleted(DPID dpId);
+    HttpProxyServer();
+    virtual ~HttpProxyServer();
+    void OnClientConnected(nl::network::DPID dpId);
+    void OnClientDisconnected(nl::network::DPID dpId);
+    void OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte, DWORD dwSize);
+    void OnSendCompleted(nl::network::DPID dpId);
     void Process();
 
-    inline map<DPID, HttpProxyClient*>& GetClients() { return m_clients; }
+    inline std::map<nl::network::DPID, HttpProxyClient*>& GetClients() { return m_clients; }
 
 private:
-    HttpProxyClient* AllocateClient(DPID dpId);
+    HttpProxyClient* AllocateClient(nl::network::DPID dpId);
     void FreeClient(HttpProxyClient* client);
 
     HttpProxyClient* m_pFreeList;
-    map<DPID, HttpProxyClient*> m_clients;
+    std::map<nl::network::DPID, HttpProxyClient*> m_clients;
 };

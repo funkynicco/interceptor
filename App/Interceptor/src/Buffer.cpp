@@ -5,15 +5,15 @@
 
 #define MIN_BUFSIZE 1024
 
-CBuffer::CBuffer() :
-    m_pHead(NULL),
-    m_pTail(NULL),
-    m_pExtHead(NULL),
-    m_pExtTail(NULL)
+Buffer::Buffer() :
+    m_pHead(nullptr),
+    m_pTail(nullptr),
+    m_pExtHead(nullptr),
+    m_pExtTail(nullptr)
 {
 }
 
-CBuffer::~CBuffer()
+Buffer::~Buffer()
 {
     LPDATA_BUF ptr = m_pHead;
     LPDATA_BUF ptrNext;
@@ -34,14 +34,14 @@ CBuffer::~CBuffer()
         ptr = ptrNext;
     }
 
-    for (map<DWORD_PTR, LPDATA_BUF>::iterator it = m_mapAlloc.begin(); it != m_mapAlloc.end(); ++it)
+    for (std::map<DWORD_PTR, LPDATA_BUF>::iterator it = m_mapAlloc.begin(); it != m_mapAlloc.end(); ++it)
     {
         free(it->second->lpBuf);
         delete it->second;
     }
 }
 
-LPBYTE CBuffer::Allocate(int nSize)
+LPBYTE Buffer::Allocate(int nSize)
 {
     LPDATA_BUF ptr = nSize > MIN_BUFSIZE ? m_pExtHead : m_pHead;
 
@@ -55,40 +55,40 @@ LPBYTE CBuffer::Allocate(int nSize)
         ptr = ptr->next;
     }
 
-    if (ptr == NULL)
+    if (ptr == nullptr)
     {
         nSize = nSize < MIN_BUFSIZE ? MIN_BUFSIZE : nl::util::GetClosestSquared(nSize);
         LPBYTE lpBuf = (LPBYTE)malloc(nSize);
-        if (lpBuf == NULL)
-            return NULL;
+        if (lpBuf == nullptr)
+            return nullptr;
 
         ptr = new DATA_BUF;
         ptr->nSize = nSize;
         ptr->lpBuf = lpBuf;
-        ptr->prev = NULL;
-        ptr->next = NULL;
-        m_mapAlloc.insert(pair<DWORD_PTR, LPDATA_BUF>((DWORD_PTR)lpBuf, ptr));
+        ptr->prev = nullptr;
+        ptr->next = nullptr;
+        m_mapAlloc.insert(std::pair<DWORD_PTR, LPDATA_BUF>((DWORD_PTR)lpBuf, ptr));
     }
 
     return ptr->lpBuf;
 }
 
-map<DWORD_PTR, LPDATA_BUF>::iterator CBuffer::Free(LPBYTE lpBuf)
+std::map<DWORD_PTR, LPDATA_BUF>::iterator Buffer::Free(LPBYTE lpBuf)
 {
-    map<DWORD_PTR, LPDATA_BUF>::iterator it = m_mapAlloc.find((DWORD_PTR)lpBuf);
+    std::map<DWORD_PTR, LPDATA_BUF>::iterator it = m_mapAlloc.find((DWORD_PTR)lpBuf);
     if (it != m_mapAlloc.end())
     {
-        it->second->prev = NULL;
+        it->second->prev = nullptr;
         if (it->second->nSize > MIN_BUFSIZE)
         {
-            if (m_pExtTail == NULL)
+            if (m_pExtTail == nullptr)
                 m_pExtTail = it->second;
             it->second->next = m_pExtHead;
             m_pExtHead = it->second;
         }
         else
         {
-            if (m_pTail == NULL)
+            if (m_pTail == nullptr)
                 m_pTail = it->second;
             it->second->next = m_pHead;
             m_pHead = it->second;
@@ -101,13 +101,13 @@ map<DWORD_PTR, LPDATA_BUF>::iterator CBuffer::Free(LPBYTE lpBuf)
     return it;
 }
 
-void CBuffer::Clear()
+void Buffer::Clear()
 {
-    for (map<DWORD_PTR, LPDATA_BUF>::iterator it = m_mapAlloc.begin(); it != m_mapAlloc.end(); )
+    for (std::map<DWORD_PTR, LPDATA_BUF>::iterator it = m_mapAlloc.begin(); it != m_mapAlloc.end(); )
         it = Free(it->second->lpBuf);
 }
 
-void CBuffer::AssignBuffer(LPDATA_BUF lpBuf)
+void Buffer::AssignBuffer(LPDATA_BUF lpBuf)
 {
     if (lpBuf->next)
         lpBuf->next->prev = lpBuf->prev;
@@ -128,5 +128,5 @@ void CBuffer::AssignBuffer(LPDATA_BUF lpBuf)
             m_pTail = m_pTail->prev;
     }
 
-    m_mapAlloc.insert(pair<DWORD_PTR, LPDATA_BUF>((DWORD_PTR)lpBuf->lpBuf, lpBuf));
+    m_mapAlloc.insert(std::pair<DWORD_PTR, LPDATA_BUF>((DWORD_PTR)lpBuf->lpBuf, lpBuf));
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <NativeLib/Network/AsynchronousTcpServer.h>
+
 #include "../Shared/NetworkDefines.h"
 
 enum SocksAuthentication : BYTE
@@ -9,12 +11,11 @@ enum SocksAuthentication : BYTE
     SOCKSAUTH_LOGIN = 0x02
 };
 
-class CProxyServer;
 struct ProxyClient
 {
-    CProxyServer* pServer;
+    class ProxyServer* pServer;
     BOOL bQueryDisconnect;
-    DPID dpId;
+    nl::network::DPID dpId;
     char szIP[16];
     DWORD dwIP;
     // Socket that is connected to the target host
@@ -27,9 +28,9 @@ struct ProxyClient
 
     ProxyClient* next;
 
-    ProxyClient(CProxyServer* pServer) :
+    ProxyClient(class ProxyServer* pServer) :
         pServer(pServer),
-        next(NULL),
+        next(nullptr),
         Socket(INVALID_SOCKET)
     {
         tv.tv_sec = 0;
@@ -42,7 +43,7 @@ struct ProxyClient
         Free();
     }
 
-    void Init(DPID dpId)
+    void Init(nl::network::DPID dpId)
     {
         this->dpId = dpId;
         dwIP = 0;
@@ -60,29 +61,29 @@ struct ProxyClient
     }
 
     void Disconnect();
-    inline BOOL IsDisconnect() { return bQueryDisconnect; }
+    inline BOOL IsDisconnect() const { return bQueryDisconnect; }
 
     void SendRequestError(BYTE byError, DWORD dwAddress, WORD wPort);
     void Process();
 };
 
-class CProxyServer : public CIocpServer
+class ProxyServer : public nl::network::AsynchronousTcpServer
 {
 public:
-    CProxyServer();
-    virtual ~CProxyServer();
-    void OnClientConnected(DPID dpId);
-    void OnClientDisconnected(DPID dpId);
-    void OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSize);
-    void OnSendCompleted(DPID dpId);
+    ProxyServer();
+    virtual ~ProxyServer();
+    void OnClientConnected(nl::network::DPID dpId);
+    void OnClientDisconnected(nl::network::DPID dpId);
+    void OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte, DWORD dwSize);
+    void OnSendCompleted(nl::network::DPID dpId);
     void Process();
 
-    inline map<DPID, ProxyClient*>& GetClients() { return m_clients; }
+    inline std::map<nl::network::DPID, ProxyClient*>& GetClients() { return m_clients; }
 
 private:
-    ProxyClient* AllocateClient(DPID dpId);
+    ProxyClient* AllocateClient(nl::network::DPID dpId);
     void FreeClient(ProxyClient* client);
 
     ProxyClient* m_pFreeList;
-    map<DPID, ProxyClient*> m_clients;
+    std::map<nl::network::DPID, ProxyClient*> m_clients;
 };

@@ -1,19 +1,18 @@
 #include "StdAfx.h"
 #include "ProxyServer.h"
 
-CProxyServer::CProxyServer() :
-    m_pFreeList(NULL)
+ProxyServer::ProxyServer() :
+    m_pFreeList(nullptr)
 {
-
 }
 
-CProxyServer::~CProxyServer()
+ProxyServer::~ProxyServer()
 {
-    for (map<DPID, ProxyClient*>::iterator it = m_clients.begin(); it != m_clients.end(); ++it)
+    for (std::map<nl::network::DPID, ProxyClient*>::iterator it = m_clients.begin(); it != m_clients.end(); ++it)
         delete it->second;
 }
 
-void CProxyServer::OnClientConnected(DPID dpId)
+void ProxyServer::OnClientConnected(nl::network::DPID dpId)
 {
     DWORD dwIP = GetClientIP(dpId);
 
@@ -31,12 +30,12 @@ void CProxyServer::OnClientConnected(DPID dpId)
     client->connectionInfo.csState = CST_ESTABLISHING;
     strcpy(client->connectionInfo.szLocalIp, client->szIP);
 
-    m_clients.insert(pair<DPID, ProxyClient*>(dpId, client));
+    m_clients.insert(std::pair<nl::network::DPID, ProxyClient*>(dpId, client));
 }
 
-void CProxyServer::OnClientDisconnected(DPID dpId)
+void ProxyServer::OnClientDisconnected(DPID dpId)
 {
-    map<DPID, ProxyClient*>::iterator it = m_clients.find(dpId);
+    std::map<nl::network::DPID, ProxyClient*>::iterator it = m_clients.find(dpId);
     if (it == m_clients.end())
     {
         WriteDebug("FATAL error in OnClientDisconnected (dpId not found in clients)");
@@ -52,9 +51,9 @@ void CProxyServer::OnClientDisconnected(DPID dpId)
     FreeClient(client);
 }
 
-void CProxyServer::OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSize)
+void ProxyServer::OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte, DWORD dwSize)
 {
-    map<DPID, ProxyClient*>::iterator it = m_clients.find(dpId);
+    std::map<nl::network::DPID, ProxyClient*>::iterator it = m_clients.find(dpId);
     if (it == m_clients.end())
     {
         WriteDebug("FATAL error in OnClientDataReceived (dpId not found in clients)");
@@ -98,7 +97,7 @@ void CProxyServer::OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSize)
                 return;
             }
 
-            unordered_set<BYTE> auths;
+            std::unordered_set<BYTE> auths;
             //printf( "AUTHS: " );
             for (BYTE n = 0; n < lpBuf[1]; ++n)
             {
@@ -258,21 +257,20 @@ void CProxyServer::OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSize)
     }
 }
 
-void CProxyServer::OnSendCompleted(DPID dpId)
+void ProxyServer::OnSendCompleted(nl::network::DPID dpId)
 {
-
 }
 
-void CProxyServer::Process()
+void ProxyServer::Process()
 {
-    for (map<DPID, ProxyClient*>::iterator it = m_clients.begin(); it != m_clients.end(); ++it)
+    for (std::map<nl::network::DPID, ProxyClient*>::iterator it = m_clients.begin(); it != m_clients.end(); ++it)
     {
         if (!it->second->IsDisconnect())
             it->second->Process();
     }
 }
 
-ProxyClient* CProxyServer::AllocateClient(DPID dpId)
+ProxyClient* ProxyServer::AllocateClient(nl::network::DPID dpId)
 {
     auto client = m_pFreeList;
     if (client)
@@ -284,7 +282,7 @@ ProxyClient* CProxyServer::AllocateClient(DPID dpId)
     return client;
 }
 
-void CProxyServer::FreeClient(ProxyClient* client)
+void ProxyServer::FreeClient(ProxyClient* client)
 {
     client->Free(); // close remote proxy socket and such
 

@@ -3,19 +3,18 @@
 
 #include "../Shared/HostnameExtractor.inl"
 
-CHttpProxyServer::CHttpProxyServer() :
-    m_pFreeList(NULL)
+HttpProxyServer::HttpProxyServer() :
+    m_pFreeList(nullptr)
 {
-
 }
 
-CHttpProxyServer::~CHttpProxyServer()
+HttpProxyServer::~HttpProxyServer()
 {
-    for (map<DPID, HttpProxyClient*>::iterator it = m_clients.begin(); it != m_clients.end(); ++it)
+    for (std::map<nl::network::DPID, HttpProxyClient*>::iterator it = m_clients.begin(); it != m_clients.end(); ++it)
         delete it->second;
 }
 
-void CHttpProxyServer::OnClientConnected(DPID dpId)
+void HttpProxyServer::OnClientConnected(nl::network::DPID dpId)
 {
     DWORD dwIP = GetClientIP(dpId);
 
@@ -37,12 +36,12 @@ void CHttpProxyServer::OnClientConnected(DPID dpId)
     client->connectionInfo.csState = CST_ESTABLISHING;
     strcpy(client->connectionInfo.szLocalIp, client->szIP);
 
-    m_clients.insert(pair<DPID, HttpProxyClient*>(dpId, client));
+    m_clients.insert(std::pair<nl::network::DPID, HttpProxyClient*>(dpId, client));
 }
 
-void CHttpProxyServer::OnClientDisconnected(DPID dpId)
+void HttpProxyServer::OnClientDisconnected(nl::network::DPID dpId)
 {
-    map<DPID, HttpProxyClient*>::iterator it = m_clients.find(dpId);
+    std::map<nl::network::DPID, HttpProxyClient*>::iterator it = m_clients.find(dpId);
     if (it == m_clients.end())
     {
         WriteDebug("FATAL error in OnClientDisconnected (dpId %u not found in clients)", dpId);
@@ -58,15 +57,15 @@ void CHttpProxyServer::OnClientDisconnected(DPID dpId)
     FreeClient(client);
 }
 
-#define SET_STAGE( _stage ) { client->stage = _stage; switch(_stage){\
-case STAGE_CONNECTING: WriteDebug( __FUNCTION__ " - SetStage( STAGE_CONNECTING ), Socket: %u", client->dpId ); break; \
-case STAGE_REQUEST: WriteDebug( __FUNCTION__ " - SetStage( STAGE_REQUEST ), Socket: %u", client->dpId ); break; \
-case STAGE_ESTABLISHED: WriteDebug( __FUNCTION__ " - SetStage( STAGE_ESTABLISHED ), Socket: %u", client->dpId ); break; \
+#define SET_STAGE(_stage) { client->stage = _stage; switch (_stage) { \
+    case STAGE_CONNECTING: WriteDebug(__FUNCTION__ " - SetStage(STAGE_CONNECTING), Socket: %u", client->dpId); break; \
+    case STAGE_REQUEST: WriteDebug(__FUNCTION__ " - SetStage(STAGE_REQUEST), Socket: %u", client->dpId); break; \
+    case STAGE_ESTABLISHED: WriteDebug(__FUNCTION__ " - SetStage(STAGE_ESTABLISHED), Socket: %u", client->dpId); break; \
 }}
 
-void CHttpProxyServer::OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSize)
+void HttpProxyServer::OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte, DWORD dwSize)
 {
-    map<DPID, HttpProxyClient*>::iterator it = m_clients.find(dpId);
+    std::map<nl::network::DPID, HttpProxyClient*>::iterator it = m_clients.find(dpId);
     if (it == m_clients.end())
     {
         WriteDebug("FATAL error in OnClientDataReceived (dpId %u not found in clients)", dpId);
@@ -164,7 +163,7 @@ void CHttpProxyServer::OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSi
             if (ValidateAndExtractHost((const char*)lpBuf, buflen, hostname, sizeof(hostname)))
             {
                 LPHTTP_PROXY_ROUTE lpRoute = CHttpProxyRoutes::GetInstance()->GetRoute(hostname);
-                if (lpRoute == NULL)
+                if (lpRoute == nullptr)
                 {
                     WriteDebug("No route found for hostname: '%s'\n", hostname);
                     client->Disconnect();
@@ -175,10 +174,10 @@ void CHttpProxyServer::OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSi
 
                 sockaddr_in addr;
                 addr.sin_family = AF_INET;
-                addr.sin_addr.s_addr = lpHost == NULL ? inet_addr(lpRoute->Address) : *(u_long*)lpHost->h_addr_list[0];
+                addr.sin_addr.s_addr = lpHost == nullptr ? inet_addr(lpRoute->Address) : *(u_long*)lpHost->h_addr_list[0];
                 addr.sin_port = htons(lpRoute->Port);
 
-                map<string, string> headers;
+                std::map<std::string, std::string> headers;
                 size_t header_len = 0;
                 ValidateAndExtractRequestHeader((const char*)lpBuf, buflen, headers, &header_len);
 
@@ -204,7 +203,7 @@ void CHttpProxyServer::OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSi
                 client->buffer.Insert(0, (LPSTR)(LPCSTR)strHeader, strHeader.GetLength());
                 buflen = client->buffer.GetLength();
 
-                map<string, string>::iterator it = headers.find("Content-Length");
+                std::map<std::string, std::string>::iterator it = headers.find("Content-Length");
                 if (it != headers.end())
                 {
                     size_t content_length = 0;
@@ -260,21 +259,20 @@ void CHttpProxyServer::OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSi
     }
 }
 
-void CHttpProxyServer::OnSendCompleted(DPID dpId)
+void HttpProxyServer::OnSendCompleted(nl::network::DPID dpId)
 {
-
 }
 
-void CHttpProxyServer::Process()
+void HttpProxyServer::Process()
 {
-    for (map<DPID, HttpProxyClient*>::iterator it = m_clients.begin(); it != m_clients.end(); ++it)
+    for (std::map<nl::network::DPID, HttpProxyClient*>::iterator it = m_clients.begin(); it != m_clients.end(); ++it)
     {
         if (!it->second->IsDisconnect())
             it->second->Process();
     }
 }
 
-HttpProxyClient* CHttpProxyServer::AllocateClient(DPID dpId)
+HttpProxyClient* HttpProxyServer::AllocateClient(nl::network::DPID dpId)
 {
     auto client = m_pFreeList;
     if (client)
@@ -286,7 +284,7 @@ HttpProxyClient* CHttpProxyServer::AllocateClient(DPID dpId)
     return client;
 }
 
-void CHttpProxyServer::FreeClient(HttpProxyClient* client)
+void HttpProxyServer::FreeClient(HttpProxyClient* client)
 {
     client->Free(); // close remote proxy socket and such
 

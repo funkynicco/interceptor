@@ -3,23 +3,22 @@
 
 #include <NativeLib/Parsing/Scanner.h>
 
-CHttpProxyRoutes::CHttpProxyRoutes()
+HttpProxyRoutes::HttpProxyRoutes()
 {
-
 }
 
-CHttpProxyRoutes::~CHttpProxyRoutes()
+HttpProxyRoutes::~HttpProxyRoutes()
 {
     Clear();
 }
 
-void CHttpProxyRoutes::AddRoute(const char* hostname, const char* destination_address, int destination_port, const char* destination_http_host)
+void HttpProxyRoutes::AddRoute(const char* hostname, const char* destination_address, int destination_port, const char* destination_http_host)
 {
     char temp[128];
     strcpy(temp, hostname);
     _strlwr(temp);
 
-    map<string, LPHTTP_PROXY_ROUTE>::iterator it = m_routes.find(temp);
+    std::map<std::string, LPHTTP_PROXY_ROUTE>::iterator it = m_routes.find(temp);
     if (it != m_routes.end())
     {
         WriteDebug(__FUNCTION__ " - Route '%s' already exists, pointing to %s:%d", hostname, destination_address, destination_port);
@@ -35,10 +34,10 @@ void CHttpProxyRoutes::AddRoute(const char* hostname, const char* destination_ad
     else
         *lpRoute->DestinationHttpHost = 0;
 
-    m_routes.insert(pair<string, LPHTTP_PROXY_ROUTE>(temp, lpRoute));
+    m_routes.insert(std::pair<std::string, LPHTTP_PROXY_ROUTE>(temp, lpRoute));
 }
 
-BOOL CHttpProxyRoutes::LoadRoutes(const char* filename)
+BOOL HttpProxyRoutes::LoadRoutes(const char* filename)
 {
     nl::parsing::Scanner scanner;
     try
@@ -93,9 +92,9 @@ BOOL CHttpProxyRoutes::LoadRoutes(const char* filename)
     return TRUE;
 }
 
-void CHttpProxyRoutes::Clear()
+void HttpProxyRoutes::Clear()
 {
-    for (map<string, LPHTTP_PROXY_ROUTE>::iterator it = m_routes.begin(); it != m_routes.end(); ++it)
+    for (std::map<std::string, LPHTTP_PROXY_ROUTE>::iterator it = m_routes.begin(); it != m_routes.end(); ++it)
     {
         delete it->second;
     }

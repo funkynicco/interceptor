@@ -12,11 +12,11 @@ unsigned __int64 g_nTotalOut = 0;
 
 const int NumberOfConnectionsToShow = 17;
 
-static CProxyServer* g_pProxyServer = NULL;
-static CHttpProxyServer* g_pHttpProxyServer = NULL;
+static CProxyServer* g_pProxyServer = nullptr;
+static CHttpProxyServer* g_pHttpProxyServer = nullptr;
 static BOOL g_bIsHttp = TRUE;
 
-static HANDLE hConsole = NULL;
+static HANDLE hConsole = nullptr;
 inline void SCP(int x, int y)
 {
     COORD pos = { x, y };
@@ -147,7 +147,7 @@ inline void PrintConnections(_TyServer* pServer)
 
     for (int i = 0; i < NumberOfConnectionsToShow; ++i)
     {
-        ConnectionInfo* con = NULL;//i < connections.size() ? &connections[ i ] : NULL;
+        ConnectionInfo* con = nullptr;//i < connections.size() ? &connections[ i ] : nullptr;
 
         if (it != clients.end())
         {
@@ -259,7 +259,7 @@ inline void RunServer(_TyServer* pServer, int port)
             pServer->ReceiveMessages();
             pServer->Process();
 
-            time_t now = time(NULL);
+            time_t now = time(nullptr);
             if (now >= nextCalculateSpeed)
             {
                 static unsigned __int64 oldIn = 0;
@@ -289,6 +289,8 @@ inline void RunServer(_TyServer* pServer, int port)
 
 int main(int argc, char* argv[])
 {
+#error must initialize nativelib here...
+
 #if 0
     const char* request_html = "GET /ca/lol?test=keke HTTP/1.1\r\nHost: lol.com\r\nContent-Length: blah\r\n\r\n";
 
@@ -306,7 +308,7 @@ int main(int argc, char* argv[])
 
     //CHttpProxyRoutes::GetInstance()->AddRoute( "meteorflyff.com", "192.168.1.64", 80 );
     if (!CHttpProxyRoutes::GetInstance()->LoadRoutes("routes.cfg"))
-        MessageBox(NULL, "Failed to load routes.cfg", "Routes", MB_OK | MB_ICONWARNING);
+        MessageBox(nullptr, "Failed to load routes.cfg", "Routes", MB_OK | MB_ICONWARNING);
 
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);

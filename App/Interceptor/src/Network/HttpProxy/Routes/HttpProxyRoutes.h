@@ -8,33 +8,33 @@ typedef struct _tagHTTP_PROXY_ROUTE
 
 } HTTP_PROXY_ROUTE, * LPHTTP_PROXY_ROUTE;
 
-class CHttpProxyRoutes
+class HttpProxyRoutes
 {
 public:
-    CHttpProxyRoutes();
-    virtual ~CHttpProxyRoutes();
+    HttpProxyRoutes();
+    virtual ~HttpProxyRoutes();
 
-    void AddRoute(const char* hostname, const char* destination_address, int destination_port, const char* destination_http_host = NULL);
+    void AddRoute(const char* hostname, const char* destination_address, int destination_port, const char* destination_http_host = nullptr);
     LPHTTP_PROXY_ROUTE GetRoute(const char* hostname);
     BOOL LoadRoutes(const char* filename);
     void Clear();
 
-    static CHttpProxyRoutes* GetInstance()
+    static HttpProxyRoutes* GetInstance()
     {
-        static CHttpProxyRoutes instance;
+        static HttpProxyRoutes instance;
         return &instance;
     }
 
 private:
-    map<string, LPHTTP_PROXY_ROUTE> m_routes;
+    std::map<std::string, LPHTTP_PROXY_ROUTE> m_routes;
 };
 
-inline LPHTTP_PROXY_ROUTE CHttpProxyRoutes::GetRoute(const char* hostname)
+inline LPHTTP_PROXY_ROUTE HttpProxyRoutes::GetRoute(const char* hostname)
 {
     char temp[128];
     strcpy(temp, hostname);
     _strlwr(temp);
 
-    map<string, LPHTTP_PROXY_ROUTE>::iterator it = m_routes.find(temp);
-    return it != m_routes.end() ? it->second : NULL;
+    std::map<std::string, LPHTTP_PROXY_ROUTE>::iterator it = m_routes.find(temp);
+    return it != m_routes.end() ? it->second : nullptr;
 }

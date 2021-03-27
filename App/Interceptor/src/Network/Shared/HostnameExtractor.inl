@@ -5,7 +5,7 @@ inline BOOL ValidateAndExtractHost(
     size_t request_len,
     char* host,
     size_t sizeOfHost,
-    const char* defaultHost = NULL)
+    const char* defaultHost = nullptr)
 {
     BOOL bIsPost = (request_len >= 6 && memcmp(request_html, "POST /", 6) == 0);
 
@@ -53,7 +53,7 @@ inline BOOL ValidateAndExtractHost(
                     (*(ptr + 1) == '\r' && ptr + 2 < end && *(ptr + 2) == '\n')))
             {
                 if (*host == 0 &&
-                    defaultHost != NULL)
+                    defaultHost != nullptr)
                     strcpy(host, defaultHost);
 
                 return TRUE;
@@ -88,8 +88,8 @@ inline BOOL ValidateAndExtractHost(
 inline BOOL ValidateAndExtractRequestHeader(
     const char* request_html,
     size_t request_len,
-    map<string, string>& headers,
-    size_t* pnHeaderLength = NULL)
+    std::map<std::string, std::string>& headers,
+    size_t* pnHeaderLength = nullptr)
 {
     BOOL bIsPost = (request_len >= 6 && memcmp(request_html, "POST /", 6) == 0);
 
@@ -123,7 +123,7 @@ inline BOOL ValidateAndExtractRequestHeader(
             memcpy(value, request_html + (bIsPost ? 5 : 4), val_len);
             value[val_len] = 0;
 
-            headers.insert(pair<string, string>("_GET_QUERY_", value));
+            headers.insert(std::pair<std::string, std::string>("_GET_QUERY_", value));
         }
 
         if (*ptr == '\n')
@@ -132,7 +132,7 @@ inline BOOL ValidateAndExtractRequestHeader(
                 *keyword &&
                 *value)
             {
-                headers.insert(pair<string, string>(keyword, value));
+                headers.insert(std::pair<std::string, std::string>(keyword, value));
             }
 
             keyword_ptr = keyword;
