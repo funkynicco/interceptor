@@ -2,6 +2,11 @@
 
 #include "Network\Shared\HostnameExtractor.inl"
 
+#include "Buffer.h"
+#include "Network\Socks\ProxyServer.h"
+#include "Network\HttpProxy\Routes\HttpProxyRoutes.h"
+#include "Network\HttpProxy\HttpProxyServer.h"
+
 unsigned __int64 g_nTotalIn = 0;
 unsigned __int64 g_nTotalOut = 0;
 

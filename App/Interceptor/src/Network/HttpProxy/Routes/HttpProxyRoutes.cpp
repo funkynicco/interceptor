@@ -1,6 +1,8 @@
 #include "StdAfx.h"
 #include "HttpProxyRoutes.h"
 
+#include <NativeLib/Parsing/Scanner.h>
+
 CHttpProxyRoutes::CHttpProxyRoutes()
 {
 
@@ -38,46 +40,54 @@ void CHttpProxyRoutes::AddRoute(const char* hostname, const char* destination_ad
 
 BOOL CHttpProxyRoutes::LoadRoutes(const char* filename)
 {
-    CScanner scanner;
-    if (!scanner.Load(filename))
+    nl::parsing::Scanner scanner;
+    try
+    {
+        scanner = nl::parsing::Scanner::FromFile(filename);
+    }
+    catch (Exception)
+    {
         return FALSE;
+    }
 
     Clear();
 
-    scanner.GetToken();
-    while (scanner.tok != FINISHED)
+    auto token = scanner.Next();
+    while (token)
     {
-        if (_strcmpi(scanner.token, "Routes") == 0)
+        if (token == "Routes")
         {
-            scanner.GetToken();
-            if (scanner.tok != FINISHED &&
-                *scanner.token == '{')
+            token = scanner.Next();
+            if (token &&
+                token == '{')
             {
-                scanner.GetToken();
-                while (scanner.tok != FINISHED &&
-                    *scanner.token != '}')
+                token = scanner.Next();
+                while (
+                    token &&
+                    token != '}')
                 {
                     char hostname[128] = { 0 };
                     char destination[128] = { 0 };
                     int port = 0;
                     char destinationHttpHost[128] = { 0 };
 
-                    strcpy(hostname, scanner.token);
-                    scanner.GetToken();
-                    strcpy(destination, scanner.token);
-                    port = scanner.GetNumber();
+                    StringViewToCharArray(hostname, token);
+                    StringViewToCharArray(destination, scanner.Next());
 
-                    scanner.GetToken();
-                    strcpy(destinationHttpHost, scanner.token);
+                    scanner
+                        .Next()
+                        .GetToken(&port);
+
+                    StringViewToCharArray(destinationHttpHost, scanner.Next());
 
                     AddRoute(hostname, destination, port, destinationHttpHost);
 
-                    scanner.GetToken();
+                    token = scanner.Next();
                 }
             }
         }
 
-        scanner.GetToken();
+        token = scanner.Next();
     }
 
     return TRUE;

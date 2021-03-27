@@ -16,12 +16,12 @@ public:
     CBuffer();
     virtual ~CBuffer();
     LPBYTE	Allocate(int nSize);
-    map<DWORD, LPDATA_BUF>::iterator Free(LPBYTE lpBuf);
+    map<DWORD_PTR, LPDATA_BUF>::iterator Free(LPBYTE lpBuf);
     void	Clear();
 
 private:
     void AssignBuffer(LPDATA_BUF lpBuf);
     LPDATA_BUF m_pHead, m_pTail;
     LPDATA_BUF m_pExtHead, m_pExtTail;
-    map<DWORD, LPDATA_BUF> m_mapAlloc;
+    map<DWORD_PTR, LPDATA_BUF> m_mapAlloc;
 };

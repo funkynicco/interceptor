@@ -37,39 +37,9 @@ solution "Interceptor"
         }
 
     filter {}
-
-    group "App"
-    project "Interceptor"
-        --dependson "TestLib"
-        location "%{prj.group}/%{prj.name}"
-        kind "ConsoleApp"
-
-        files {
-            "%{prj.group}/%{prj.name}/src/**.*",
-        }
-
-        includedirs {
-            "%{prj.group}/%{prj.name}/src",           
-        }
-
-        libdirs {
-        }
-
-        links {
-            "ws2_32.lib",
-        }
     
     group "Libraries"
         include "lib/nativelib/premake5.project.lua"
---    project "TestLib"
---        location "%{prj.group}/%{prj.name}"
---        kind "StaticLib"
---
---        files {
---            "%{prj.group}/%{prj.name}/src/**.*",
---            "%{prj.group}/%{prj.name}/include/**.*",
---        }
---
---        includedirs {
---            "%{prj.group}/%{prj.name}/src",
---        }
+
+    group "App"
+        include "premake5.interceptor.lua"

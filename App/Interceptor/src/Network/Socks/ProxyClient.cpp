@@ -12,16 +12,24 @@ void ProxyClient::Disconnect()
 
 void ProxyClient::SendRequestError(BYTE byError, DWORD dwAddress, WORD wPort)
 {
-    CAr ar;
-    ar << (BYTE)0x05; // protocol version
-    ar << byError; // status
-    ar << (BYTE)0x00; // reserved
+    char buffer[10];
+    buffer[0] = 0x05; // protocol version
+    buffer[1] = byError; // status
+    buffer[2] = 0x00; // reserved
+    
+    buffer[3] = 0x01; // ipv4 type
 
-    ar << (BYTE)0x01; // ipv4 type
-    ar << dwAddress;
-    ar << wPort;
+    // dwAddress
+    buffer[4] = (dwAddress >> 24) & 0xff;
+    buffer[5] = (dwAddress >> 16) & 0xff;
+    buffer[6] = (dwAddress >> 8) & 0xff;
+    buffer[7] = dwAddress & 0xff;
 
-    pServer->Send(dpId, ar.GetBuffer(), ar.GetLength());
+    // wPort
+    buffer[8] = (wPort >> 8) & 0xff;
+    buffer[9] = wPort & 0xff;
+
+    pServer->Send(dpId, buffer, sizeof(buffer));
 }
 
 void ProxyClient::Process()

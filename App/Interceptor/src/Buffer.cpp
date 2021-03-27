@@ -1,6 +1,8 @@
 #include "StdAfx.h"
 #include "Buffer.h"
 
+#include <NativeLib/Util.h>
+
 #define MIN_BUFSIZE 1024
 
 CBuffer::CBuffer() :
@@ -32,7 +34,7 @@ CBuffer::~CBuffer()
         ptr = ptrNext;
     }
 
-    for (map<DWORD, LPDATA_BUF>::iterator it = m_mapAlloc.begin(); it != m_mapAlloc.end(); ++it)
+    for (map<DWORD_PTR, LPDATA_BUF>::iterator it = m_mapAlloc.begin(); it != m_mapAlloc.end(); ++it)
     {
         free(it->second->lpBuf);
         delete it->second;
@@ -55,7 +57,7 @@ LPBYTE CBuffer::Allocate(int nSize)
 
     if (ptr == NULL)
     {
-        nSize = nSize < MIN_BUFSIZE ? MIN_BUFSIZE : GetPrimeNumber(nSize);
+        nSize = nSize < MIN_BUFSIZE ? MIN_BUFSIZE : nl::util::GetClosestSquared(nSize);
         LPBYTE lpBuf = (LPBYTE)malloc(nSize);
         if (lpBuf == NULL)
             return NULL;
@@ -65,15 +67,15 @@ LPBYTE CBuffer::Allocate(int nSize)
         ptr->lpBuf = lpBuf;
         ptr->prev = NULL;
         ptr->next = NULL;
-        m_mapAlloc.insert(pair<DWORD, LPDATA_BUF>((DWORD)lpBuf, ptr));
+        m_mapAlloc.insert(pair<DWORD_PTR, LPDATA_BUF>((DWORD_PTR)lpBuf, ptr));
     }
 
     return ptr->lpBuf;
 }
 
-map<DWORD, LPDATA_BUF>::iterator CBuffer::Free(LPBYTE lpBuf)
+map<DWORD_PTR, LPDATA_BUF>::iterator CBuffer::Free(LPBYTE lpBuf)
 {
-    map<DWORD, LPDATA_BUF>::iterator it = m_mapAlloc.find((DWORD)lpBuf);
+    map<DWORD_PTR, LPDATA_BUF>::iterator it = m_mapAlloc.find((DWORD_PTR)lpBuf);
     if (it != m_mapAlloc.end())
     {
         it->second->prev = NULL;
@@ -101,7 +103,7 @@ map<DWORD, LPDATA_BUF>::iterator CBuffer::Free(LPBYTE lpBuf)
 
 void CBuffer::Clear()
 {
-    for (map<DWORD, LPDATA_BUF>::iterator it = m_mapAlloc.begin(); it != m_mapAlloc.end(); )
+    for (map<DWORD_PTR, LPDATA_BUF>::iterator it = m_mapAlloc.begin(); it != m_mapAlloc.end(); )
         it = Free(it->second->lpBuf);
 }
 
@@ -126,5 +128,5 @@ void CBuffer::AssignBuffer(LPDATA_BUF lpBuf)
             m_pTail = m_pTail->prev;
     }
 
-    m_mapAlloc.insert(pair<DWORD, LPDATA_BUF>((DWORD)lpBuf->lpBuf, lpBuf));
+    m_mapAlloc.insert(pair<DWORD_PTR, LPDATA_BUF>((DWORD_PTR)lpBuf->lpBuf, lpBuf));
 }
