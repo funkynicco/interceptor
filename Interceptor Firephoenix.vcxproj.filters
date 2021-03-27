@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{0ba7071d-ddbc-41e8-8d3a-e2e197eca979}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{b4322994-da53-4496-abc3-99ed54daa2ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\HttpProxy">
+      <UniqueIdentifier>{9c895c0a-2faa-4ff0-9ea0-b0c99672b384}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Socks">
+      <UniqueIdentifier>{85de1b6f-3f38-4777-a97e-2ffd6c691878}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Shared">
+      <UniqueIdentifier>{5a9a24b7-0937-4729-9725-b17b5b49250b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\HttpProxy\Routes">
+      <UniqueIdentifier>{cabdcc60-e9cd-4caa-9348-1f1d9163f688}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="StdAfx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Buffer.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Socks\ProxyServer.h">
+      <Filter>Network\Socks</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\HttpProxy\HttpProxyServer.h">
+      <Filter>Network\HttpProxy</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Shared\NetworkDefines.h">
+      <Filter>Network\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\HttpProxy\Routes\HttpProxyRoutes.h">
+      <Filter>Network\HttpProxy\Routes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Buffer.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\Socks\ProxyClient.cpp">
+      <Filter>Network\Socks</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\Socks\ProxyServer.cpp">
+      <Filter>Network\Socks</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\HttpProxy\HttpProxyClient.cpp">
+      <Filter>Network\HttpProxy</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\HttpProxy\HttpProxyServer.cpp">
+      <Filter>Network\HttpProxy</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\HttpProxy\Routes\HttpProxyRoutes.cpp">
+      <Filter>Network\HttpProxy\Routes</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Utilities.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Network\Shared\HostnameExtractor.inl">
+      <Filter>Network\Shared</Filter>
+    </None>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+.vs/
+BACKUP*/
+Debug/
+Release/
+
+*.sdf
+*.suo
+routes.cfg
+*.user
