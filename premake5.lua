@@ -59,7 +59,8 @@ solution "Interceptor"
             "ws2_32.lib",
         }
     
---    group "Libraries"
+    group "Libraries"
+        include "lib/nativelib/premake5.project.lua"
 --    project "TestLib"
 --        location "%{prj.group}/%{prj.name}"
 --        kind "StaticLib"
