@@ -1,6 +1,7 @@
 #pragma once
 
 #include <NativeLib/Network/AsynchronousTcpServer.h>
+#include <NativeLib/IO/MemoryStream.h>
 
 #include "../Shared/NetworkDefines.h"
 
@@ -13,7 +14,7 @@ struct HttpProxyClient
     DWORD dwIP;
     // Socket that is connected to the target host
     SOCKET Socket;
-    CAr buffer;
+    nl::io::MemoryStream buffer;
     AuthenticationStage stage;
     fd_set fd;
     TIMEVAL tv;
@@ -46,7 +47,11 @@ struct HttpProxyClient
         *szIP = 0;
         bQueryDisconnect = FALSE;
         stage = STAGE_REQUEST;
-        SAFE_CLOSE_SOCKET(Socket);
+        if (Socket != INVALID_SOCKET)
+        {
+            closesocket(Socket);
+            Socket = INVALID_SOCKET;
+        }
         buffer.Flush();
         ZeroMemory(&connectionInfo, sizeof(connectionInfo));
         remainingRequestData = 0;
@@ -54,7 +59,11 @@ struct HttpProxyClient
 
     void Free()
     {
-        SAFE_CLOSE_SOCKET(Socket);
+        if (Socket != INVALID_SOCKET)
+        {
+            closesocket(Socket);
+            Socket = INVALID_SOCKET;
+        }
     }
 
     void Disconnect();

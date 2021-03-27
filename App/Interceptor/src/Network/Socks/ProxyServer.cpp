@@ -33,7 +33,7 @@ void ProxyServer::OnClientConnected(nl::network::DPID dpId)
     m_clients.insert(std::pair<nl::network::DPID, ProxyClient*>(dpId, client));
 }
 
-void ProxyServer::OnClientDisconnected(DPID dpId)
+void ProxyServer::OnClientDisconnected(nl::network::DPID dpId)
 {
     std::map<nl::network::DPID, ProxyClient*>::iterator it = m_clients.find(dpId);
     if (it == m_clients.end())
