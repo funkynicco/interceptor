@@ -7,3 +7,7 @@ Release/
 *.suo
 routes.cfg
 *.user
+
+*.vcxproj
+*.filters
+*.sln

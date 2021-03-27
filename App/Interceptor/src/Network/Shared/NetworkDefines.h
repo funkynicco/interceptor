@@ -18,8 +18,8 @@ enum ConnectionState
 
 struct ConnectionInfo
 {
-    char szLocalIp[ 16 ];
-    char szRemoteIp[ 16 ];
+    char szLocalIp[16];
+    char szRemoteIp[16];
     WORD wPort;
     ConnectionState csState;
     unsigned __int64 dataIn;

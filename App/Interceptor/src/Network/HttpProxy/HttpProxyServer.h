@@ -8,7 +8,7 @@ struct HttpProxyClient
     CHttpProxyServer* pServer;
     BOOL bQueryDisconnect;
     DPID dpId;
-    char szIP[ 16 ];
+    char szIP[16];
     DWORD dwIP;
     // Socket that is connected to the target host
     SOCKET Socket;
@@ -23,14 +23,14 @@ struct HttpProxyClient
 
     HttpProxyClient* next;
 
-    HttpProxyClient( CHttpProxyServer* pServer ) :
-        pServer( pServer ),
-        next( NULL ),
-        Socket( INVALID_SOCKET )
+    HttpProxyClient(CHttpProxyServer* pServer) :
+        pServer(pServer),
+        next(NULL),
+        Socket(INVALID_SOCKET)
     {
         tv.tv_sec = 0;
         tv.tv_usec = 1;
-        Init( DPID_UNKNOWN );
+        Init(DPID_UNKNOWN);
     }
 
     ~HttpProxyClient()
@@ -38,47 +38,47 @@ struct HttpProxyClient
         Free();
     }
 
-    void Init( DPID dpId )
+    void Init(DPID dpId)
     {
         this->dpId = dpId;
         dwIP = 0;
         *szIP = 0;
         bQueryDisconnect = FALSE;
         stage = STAGE_REQUEST;
-        SAFE_CLOSE_SOCKET( Socket );
+        SAFE_CLOSE_SOCKET(Socket);
         buffer.Flush();
-        ZeroMemory( &connectionInfo, sizeof( connectionInfo ) );
+        ZeroMemory(&connectionInfo, sizeof(connectionInfo));
         remainingRequestData = 0;
     }
 
     void Free()
     {
-        SAFE_CLOSE_SOCKET( Socket );
+        SAFE_CLOSE_SOCKET(Socket);
     }
 
     void Disconnect();
     inline BOOL IsDisconnect() { return bQueryDisconnect; }
 
-    void SendHtml( const char* text );
+    void SendHtml(const char* text);
     void Process();
 };
 
 class CHttpProxyServer : public CIocpServer
 {
 public:
-    CHttpProxyServer( );
-    virtual ~CHttpProxyServer( );
-    void OnClientConnected( DPID dpId );
-    void OnClientDisconnected( DPID dpId );
-    void OnClientDataReceived( DPID dpId, LPBYTE lpByte, DWORD dwSize );
-    void OnSendCompleted( DPID dpId );
+    CHttpProxyServer();
+    virtual ~CHttpProxyServer();
+    void OnClientConnected(DPID dpId);
+    void OnClientDisconnected(DPID dpId);
+    void OnClientDataReceived(DPID dpId, LPBYTE lpByte, DWORD dwSize);
+    void OnSendCompleted(DPID dpId);
     void Process();
 
-    inline map<DPID, HttpProxyClient*>& GetClients( ) { return m_clients; }
+    inline map<DPID, HttpProxyClient*>& GetClients() { return m_clients; }
 
 private:
-    HttpProxyClient* AllocateClient( DPID dpId );
-    void FreeClient( HttpProxyClient* client );
+    HttpProxyClient* AllocateClient(DPID dpId);
+    void FreeClient(HttpProxyClient* client);
 
     HttpProxyClient* m_pFreeList;
     map<DPID, HttpProxyClient*> m_clients;
