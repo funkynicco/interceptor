@@ -2,6 +2,8 @@
 
 #include <Windows.h>
 
+#include <time.h>
+
 #include <map>
 #include <list>
 #include <unordered_set>

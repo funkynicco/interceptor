@@ -13,5 +13,7 @@ project "Interceptor"
     }
 
     links {
-        "nativelib"
+        "nativelib",
+        "ws2_32.lib",
+        "dbghelp.lib"
     }

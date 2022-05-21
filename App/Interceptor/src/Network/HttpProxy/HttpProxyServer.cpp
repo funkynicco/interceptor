@@ -1,7 +1,10 @@
 #include "StdAfx.h"
 #include "HttpProxyServer.h"
 
+#include <NativeLib/String.h>
+
 #include "../Shared/HostnameExtractor.inl"
+#include "Routes/HttpProxyRoutes.h"
 
 HttpProxyServer::HttpProxyServer() :
     m_pFreeList(nullptr)
@@ -87,10 +90,10 @@ void HttpProxyServer::OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte
 
     //if( client->stage != STAGE_ESTABLISHED )
     {
-        client->buffer.SetOffset(client->buffer.GetLength());
+        client->buffer.Seek(0, nl::io::SeekMode::End);
         client->buffer.Write(lpByte, dwSize);
 
-        client->buffer.SetOffset(0);
+        client->buffer.Seek(0);
     }
 
     if (client->stage == STAGE_ESTABLISHED)
@@ -113,9 +116,9 @@ void HttpProxyServer::OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte
 
             if (dwSize > toSend)
             {
-                client->buffer.SetOffset(client->buffer.GetLength());
+                client->buffer.Seek(0, nl::io::SeekMode::End);
                 client->buffer.Write(lpByte + toSend, dwSize - toSend);
-                client->buffer.SetOffset(0);
+                client->buffer.Seek(0);
             }
         }
         else
@@ -136,7 +139,7 @@ void HttpProxyServer::OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte
 
     if (client->stage == STAGE_REQUEST)
     {
-        LPBYTE lpBuf = client->buffer.GetBuffer();
+        LPBYTE lpBuf = client->buffer.GetMemory().Get<BYTE>();
         size_t buflen = client->buffer.GetLength();
 
         // GET / HTTP/1.1\n\n is the minimum request possible
@@ -162,7 +165,7 @@ void HttpProxyServer::OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte
             char hostname[128];
             if (ValidateAndExtractHost((const char*)lpBuf, buflen, hostname, sizeof(hostname)))
             {
-                LPHTTP_PROXY_ROUTE lpRoute = CHttpProxyRoutes::GetInstance()->GetRoute(hostname);
+                LPHTTP_PROXY_ROUTE lpRoute = HttpProxyRoutes::GetInstance()->GetRoute(hostname);
                 if (lpRoute == nullptr)
                 {
                     WriteDebug("No route found for hostname: '%s'\n", hostname);
@@ -181,8 +184,8 @@ void HttpProxyServer::OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte
                 size_t header_len = 0;
                 ValidateAndExtractRequestHeader((const char*)lpBuf, buflen, headers, &header_len);
 
-                CString strHeader;
-                strHeader.AppendEx("%s %s HTTP/1.1\r\n", bIsGet ? "GET" : "POST", headers["_GET_QUERY_"].c_str());
+                nl::String strHeader;
+                strHeader += nl::String::Format("{} {} HTTP/1.1\r\n", bIsGet ? "GET" : "POST", headers["_GET_QUERY_"].c_str());
                 for (auto it : headers)
                 {
                     if (_strcmpi(it.first.c_str(), "_get_query_") == 0)
@@ -191,23 +194,24 @@ void HttpProxyServer::OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte
                     if (_strcmpi(it.first.c_str(), "host") == 0 &&
                         *lpRoute->DestinationHttpHost)
                     {
-                        strHeader.AppendEx("Host: %s\r\n", lpRoute->DestinationHttpHost);
+                        strHeader += nl::String::Format("Host: {}\r\n", lpRoute->DestinationHttpHost);
                     }
                     else
-                        strHeader.AppendEx("%s: %s\r\n", it.first.c_str(), it.second.c_str());
+                        strHeader += nl::String::Format("{}: {}\r\n", it.first.c_str(), it.second.c_str());
                 }
                 strHeader += "\r\n";
 
-                //client->buffer.Flush();
-                client->buffer.Remove(header_len);
-                client->buffer.Insert(0, (LPSTR)(LPCSTR)strHeader, strHeader.GetLength());
+                client->buffer.Remove(0, header_len);
+                client->buffer.Insert(0, strHeader.GetLength());
+                client->buffer.Seek(0);
+                client->buffer.Write(strHeader.c_str(), strHeader.GetLength());
                 buflen = client->buffer.GetLength();
 
                 std::map<std::string, std::string>::iterator it = headers.find("Content-Length");
                 if (it != headers.end())
                 {
                     size_t content_length = 0;
-                    if (sscanf(it->second.c_str(), "%u", &content_length) > 0)
+                    if (sscanf(it->second.c_str(), "%llu", &content_length) > 0)
                     {
                         size_t current_content_length = buflen - strHeader.GetLength();
                         if (current_content_length < content_length)

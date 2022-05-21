@@ -75,13 +75,13 @@ void ProxyServer::OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte, DW
     // client sends 05 01 00 01 ad c2 20 18 00 50
     if (client->stage != STAGE_ESTABLISHED)
     {
-        client->buffer.SetOffset(client->buffer.GetLength());
+        client->buffer.Seek(0, nl::io::SeekMode::End);
         client->buffer.Write(lpByte, dwSize);
 
-        client->buffer.SetOffset(0);
+        client->buffer.Seek(0);
     }
 
-    LPBYTE lpBuf = client->buffer.GetBuffer();
+    LPBYTE lpBuf = client->buffer.GetMemory().Get<BYTE>();
     size_t buflen = client->buffer.GetLength();
 
     if (client->stage == STAGE_INITIAL)
@@ -126,7 +126,7 @@ void ProxyServer::OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte, DW
                 return;
             }
 
-            client->buffer.Remove(2 + lpBuf[1]);
+            client->buffer.Remove(0, 2 + lpBuf[1]);
             if (client->buffer.GetLength() > 0)
             {
                 WriteDebug("ERR_DATA_NOT_CLEARED in STAGE_INITIAL (remain: %u)", client->buffer.GetLength());

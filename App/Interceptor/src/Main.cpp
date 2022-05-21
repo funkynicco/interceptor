@@ -1,5 +1,8 @@
 #include "StdAfx.h"
 
+#include <NativeLib/SystemLayer/SystemLayer.h>
+#include <NativeLib/Util.h>
+
 #include "Network\Shared\HostnameExtractor.inl"
 
 #include "Buffer.h"
@@ -7,19 +10,21 @@
 #include "Network\HttpProxy\Routes\HttpProxyRoutes.h"
 #include "Network\HttpProxy\HttpProxyServer.h"
 
+#include <conio.h>
+
 unsigned __int64 g_nTotalIn = 0;
 unsigned __int64 g_nTotalOut = 0;
 
 const int NumberOfConnectionsToShow = 17;
 
-static CProxyServer* g_pProxyServer = nullptr;
-static CHttpProxyServer* g_pHttpProxyServer = nullptr;
+static ProxyServer* g_pProxyServer = nullptr;
+static HttpProxyServer* g_pHttpProxyServer = nullptr;
 static BOOL g_bIsHttp = TRUE;
 
 static HANDLE hConsole = nullptr;
 inline void SCP(int x, int y)
 {
-    COORD pos = { x, y };
+    COORD pos = { SHORT(x), SHORT(y) };
     SetConsoleCursorPosition(hConsole, pos);
 }
 
@@ -137,10 +142,10 @@ inline void RenderFrame()
 template <typename _TyServer, typename _TyClient>
 inline void PrintConnections(_TyServer* pServer)
 {
-    static char temp[256];
+    static nl::String temp;
 
-    map<DPID, _TyClient*>& clients = pServer->GetClients();
-    map<DPID, _TyClient*>::iterator it = clients.begin();
+    std::map<nl::network::DPID, _TyClient*>& clients = pServer->GetClients();
+    std::map<nl::network::DPID, _TyClient*>::iterator it = clients.begin();
 
     int y = 3;
     int active = 0;
@@ -195,34 +200,33 @@ inline void PrintConnections(_TyServer* pServer)
         SCP(47, y);
         printf("%s", con ? (con->csState == CST_CONNECTED ? "CON" : (con->csState == CST_ESTABLISHING ? "EST" : "DIS")) : "   ");
 
-        *temp = 0;
+        temp.Clear();
 
         SCP(52, y);
         if (con)
-            GetSize(con->dataIn, temp, sizeof(temp));
-        printf("%10s", temp);
+            temp = nl::util::GetSize(con->dataIn);
+        printf("%10s", temp.c_str());
 
         SCP(64, y);
         if (con)
-            GetSize(con->dataOut, temp, sizeof(temp));
-        printf("%10s", temp);
+            temp = nl::util::GetSize(con->dataOut);
+        printf("%10s", temp.c_str());
     }
 
     // print status at bottom
     SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
     SCP(3, 22);
-    //sprintf( temp, "%d/%u active connection%s", active, clients.size(), active == 1 ? "" : "s" );
-    sprintf(temp, "Showing %d/%u active connection%s", active, clients.size(), active == 1 ? "" : "s");
-    printf("%-39s", temp);
+    temp = nl::String::Format("Showing {}/{} active connection{}", active, (uint32_t)clients.size(), active == 1 ? "" : "s");
+    printf("%-39s", temp.c_str());
 
     SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
     SCP(52, 22);
-    GetSize(g_nTotalIn, temp, sizeof(temp));
-    printf("%10s", temp);
+    temp = nl::util::GetSize(g_nTotalIn);
+    printf("%10s", temp.c_str());
 
     SCP(64, 22);
-    GetSize(g_nTotalOut, temp, sizeof(temp));
-    printf("%10s", temp);
+    temp = nl::util::GetSize(g_nTotalOut);
+    printf("%10s", temp.c_str());
 
     SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 }
@@ -230,66 +234,84 @@ inline void PrintConnections(_TyServer* pServer)
 inline void UI_PrintConnections()
 {
     if (g_bIsHttp)
-        PrintConnections<CHttpProxyServer, HttpProxyClient>(g_pHttpProxyServer);
+        PrintConnections<HttpProxyServer, HttpProxyClient>(g_pHttpProxyServer);
     else
-        PrintConnections<CProxyServer, ProxyClient>(g_pProxyServer);
+        PrintConnections<ProxyServer, ProxyClient>(g_pProxyServer);
 }
 
 template <typename _TyServer>
 inline void RunServer(_TyServer* pServer, int port)
 {
-    if (pServer->Start(port))
+    pServer->Start(inet_addr("0.0.0.0"), port, 16, 8);
+
+    WriteDebug("Server started.");
+    WriteDebug("Press [ESC] to stop server.");
+
+    RenderFrame();
+    UI_PrintConnections();
+
+    time_t nextCalculateSpeed = 0;
+    nl::String size1, size2;
+
+    while (1)
     {
-        WriteDebug("Server started.");
-        WriteDebug("Press [ESC] to stop server.");
+        if (_kbhit() &&
+            _getch() == VK_ESCAPE)
+            break;
 
-        RenderFrame();
-        UI_PrintConnections();
+        pServer->Process();
 
-        time_t nextCalculateSpeed = 0;
-        char szSize1[64];
-        char szSize2[64];
-
-        while (1)
+        time_t now = time(nullptr);
+        if (now >= nextCalculateSpeed)
         {
-            if (_kbhit() &&
-                _getch() == VK_ESCAPE)
-                break;
+            static unsigned __int64 oldIn = 0;
+            static unsigned __int64 oldOut = 0;
 
-            pServer->ReceiveMessages();
-            pServer->Process();
+            size1 = nl::util::GetSize(g_nTotalIn - oldIn);
+            size2 = nl::util::GetSize(g_nTotalOut - oldOut);
 
-            time_t now = time(nullptr);
-            if (now >= nextCalculateSpeed)
-            {
-                static unsigned __int64 oldIn = 0;
-                static unsigned __int64 oldOut = 0;
+            oldIn = g_nTotalIn;
+            oldOut = g_nTotalOut;
 
-                GetSize(g_nTotalIn - oldIn, szSize1, sizeof(szSize1));
-                GetSize(g_nTotalOut - oldOut, szSize2, sizeof(szSize2));
+            //                sprintf( temp, "In:%s Out:%s", szSize1, szSize2 );
+            //SetConsoleTitle( temp );
+            UI_PrintConnections();
 
-                oldIn = g_nTotalIn;
-                oldOut = g_nTotalOut;
-
-                //                sprintf( temp, "In:%s Out:%s", szSize1, szSize2 );
-                //SetConsoleTitle( temp );
-                UI_PrintConnections();
-
-                nextCalculateSpeed = now + 1;
-            }
-
-            Sleep(10);
+            nextCalculateSpeed = now + 1;
         }
 
-        pServer->Stop();
+        Sleep(10);
     }
-    else
-        WriteDebug("Failed to start server, check if port is in use.");
+
+    pServer->Stop();
+}
+
+void NativeLibraryAssertHandler(const nl::assert::Assert& assert)
+{
+    printf(
+        "ASSERT ERROR: %s\n- in %s:%d (%s)\n",
+        assert.Expression,
+        assert.Filename,
+        assert.Line,
+        assert.Function);
+}
+
+void SetupNativeLibrary()
+{
+    nl::systemlayer::SystemLayerFunctions functions;
+    nl::systemlayer::GetDefaultSystemLayerFunctions(&functions);
+
+    functions.AssertHandler = NativeLibraryAssertHandler;
+
+    nl::systemlayer::SetSystemLayerFunctions(&functions);
 }
 
 int main(int argc, char* argv[])
 {
-#error must initialize nativelib here...
+    WSADATA wsadata;
+    WSAStartup(MAKEWORD(2, 2), &wsadata);
+
+    SetupNativeLibrary();
 
 #if 0
     const char* request_html = "GET /ca/lol?test=keke HTTP/1.1\r\nHost: lol.com\r\nContent-Length: blah\r\n\r\n";
@@ -304,11 +326,10 @@ int main(int argc, char* argv[])
     return 0;
 #endif
 
-    DeleteFile("debug.txt");
+    DeleteFile(L"debug.txt");
 
-    //CHttpProxyRoutes::GetInstance()->AddRoute( "meteorflyff.com", "192.168.1.64", 80 );
-    if (!CHttpProxyRoutes::GetInstance()->LoadRoutes("routes.cfg"))
-        MessageBox(nullptr, "Failed to load routes.cfg", "Routes", MB_OK | MB_ICONWARNING);
+    if (!HttpProxyRoutes::GetInstance()->LoadRoutes("routes.cfg"))
+        MessageBox(nullptr, L"Failed to load routes.cfg", L"Routes", MB_OK | MB_ICONWARNING);
 
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
@@ -319,7 +340,7 @@ int main(int argc, char* argv[])
 
     WSADATA wd;
     WSAStartup(MAKEWORD(2, 2), &wd);
-    SetConsoleTitle("Interceptor Firephoenix");
+    SetConsoleTitle(L"Interceptor: Firephoenix");
 
     int port = 80;
     if (argc > 1)
@@ -348,15 +369,15 @@ int main(int argc, char* argv[])
     WriteDebug("Using port: %d", port);
     WriteDebug("Mode: %s", g_bIsHttp ? "Http" : "Socks");
 
-    CProxyServer server;
-    CHttpProxyServer httpServer;
+    ProxyServer server;
+    HttpProxyServer httpServer;
     g_pProxyServer = &server;
     g_pHttpProxyServer = &httpServer;
 
     if (g_bIsHttp)
-        RunServer<CHttpProxyServer>(g_pHttpProxyServer, port);
+        RunServer<HttpProxyServer>(g_pHttpProxyServer, port);
     else
-        RunServer<CProxyServer>(g_pProxyServer, port);
+        RunServer<ProxyServer>(g_pProxyServer, port);
 
     WSACleanup();
     return 0;

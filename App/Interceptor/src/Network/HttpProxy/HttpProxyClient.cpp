@@ -15,7 +15,7 @@ void HttpProxyClient::SendHtml(const char* text)
     static char buffer[32768];
 
     size_t text_len = strlen(text);
-    size_t len = sprintf(buffer, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %u\r\n\r\n", text_len);
+    size_t len = sprintf(buffer, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %llu\r\n\r\n", text_len);
 
     memcpy(buffer + len, text, text_len);
     len += text_len;

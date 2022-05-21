@@ -78,13 +78,13 @@ class HttpProxyServer : public nl::network::AsynchronousTcpServer
 public:
     HttpProxyServer();
     virtual ~HttpProxyServer();
-    void OnClientConnected(nl::network::DPID dpId);
-    void OnClientDisconnected(nl::network::DPID dpId);
-    void OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte, DWORD dwSize);
-    void OnSendCompleted(nl::network::DPID dpId);
+    virtual void OnClientConnected(nl::network::DPID dpId) override;
+    virtual void OnClientDisconnected(nl::network::DPID dpId) override;
+    virtual void OnClientDataReceived(nl::network::DPID dpId, LPBYTE lpByte, DWORD dwSize) override;
+    virtual void OnSendCompleted(nl::network::DPID dpId) override;
     void Process();
 
-    inline std::map<nl::network::DPID, HttpProxyClient*>& GetClients() { return m_clients; }
+    std::map<nl::network::DPID, HttpProxyClient*>& GetClients() { return m_clients; }
 
 private:
     HttpProxyClient* AllocateClient(nl::network::DPID dpId);
